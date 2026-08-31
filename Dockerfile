@@ -24,7 +24,8 @@ RUN sed -i 's/RAM_SPARE=500000000/RAM_SPARE=80000000/g' /run/memory.sh
 RUN sed -i 's/expected > capacity/1 == 2/g' /run/download.sh && \
     sed -i 's/dataSize > available/1 == 2/g' /run/disk.sh && \
     sed -i 's/required > available/1 == 2/g' /run/disk.sh && \
-    sed -i 's/currentSize > available/1 == 2/g' /run/disk.sh
+    sed -i 's/currentSize > available/1 == 2/g' /run/disk.sh && \
+    sed -i 's/backupPrevious () {/backupPrevious () {\n  return 0/g' /run/install.sh
 
 # Phiên bản Windows muốn cài đặt:
 # Sử dụng "tiny10" (Windows 10 siêu nhẹ) để chạy siêu nhanh và mượt mà trên môi trường RAM thấp.
