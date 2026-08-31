@@ -39,8 +39,8 @@ ENV CPU_CORES="max"
 ENV DISK_SIZE="32G"
 ENV DISK_FMT="qcow2"
 
-# Bật KVM="Y" vì hệ thống Railway của bạn hỗ trợ ảo hóa lồng nhau (Nested KVM Virtualization), giúp chạy nhanh gấp 10 lần và giảm tải RAM/CPU tối đa
-ENV KVM="Y"
+# Bắt buộc đặt KVM="N" vì tệp thiết bị ảo hóa /dev/kvm không được Railway chia sẻ vào trong container, tránh lỗi crash loop khởi động lại liên tục
+ENV KVM="N"
 
 # Expose cổng 8006 cho trình duyệt Web (noVNC) và cổng 3389 cho kết nối Remote Desktop (RDP)
 EXPOSE 8006 3389
