@@ -2,18 +2,39 @@
 
 Repository này đã được cấu hình lại để chạy **Windows 10** mượt mà bên trong Docker container sử dụng dự án mã nguồn mở [dockurr/windows](https://github.com/dockur/windows). Cấu hình này cực kỳ tối ưu và đã được áp dụng các bản vá "gian lận" đặc biệt để vượt qua mọi giới hạn phần cứng của **Railway**, giúp bạn chỉ cần deploy là chạy vù vù không lỗi!
 
-## 🚀 Tính năng nổi bật & Các Bản Vá "Gian Lận" Đặc Biệt cho Railway
+---
 
-- **Chạy Windows 10 siêu nhẹ (Tiny10)**: Mặc định cài đặt phiên bản **Tiny10** (bản rút gọn cực kỳ nhẹ của Windows 10, chỉ nặng 3.6 GB thay vì 5.7 GB). Phiên bản này đã lược bỏ hết bloatware, dịch vụ thừa và telemetry, giúp chạy cực kỳ mượt mà và phản hồi nhanh trên môi trường RAM thấp.
-- **GIAN LẬN RAM - Bypass giới hạn RAM tối thiểu 2GB**:
-  * *Vấn đề*: Railway thường giới hạn RAM ở mức ~1GB. Trong khi đó, dự án mặc định yêu cầu ít nhất 2GB RAM để khởi động Windows 10, nếu không container sẽ báo lỗi đỏ lòm và sập ngay lập tức.
-  * *Bản vá*: Đã thêm lệnh `RUN sed -i 's/echo "2G"/echo "128M"/g' /run/define.sh` để sửa đổi trực tiếp mã nguồn khởi động của container. Việc này hạ mức RAM yêu cầu tối thiểu xuống còn **128MB**, giúp lách qua bước kiểm tra phần cứng của container một cách hoàn hảo!
+## 🔴 GIẢI QUYẾT LỖI CONTAINER BỊ RESET / TẢI LẠI LIÊN TỤC
+
+Khi bạn deploy lên Railway và thấy thanh tiến trình đạt 100% ("Download completed successfully") nhưng sau đó hệ thống lại tự động reset và quay về bước "Downloading Tiny 10... 0%", nguyên nhân là:
+
+1.  **Hết RAM (OOM - Out of Memory)**: Giai đoạn bắt đầu cài đặt Windows của QEMU tiêu tốn nhiều tài nguyên. Nếu container vượt quá hạn mức RAM của Railway, Railway sẽ cưỡng bức tắt container (Kill) để bảo vệ hệ thống.
+2.  **Ổ cứng tạm thời (Ephemeral Disk)**: Theo mặc định, ổ cứng của container trên Railway là ổ cứng tạm thời. Khi container bị tắt hoặc restart, toàn bộ dữ liệu đã tải về và cài đặt trước đó ở thư mục `/storage` sẽ bị xóa sạch, bắt buộc hệ thống phải tải lại file ISO 3.6GB từ đầu.
+
+### ✔️ CÁCH KHẮC PHỤC TRIỆT ĐỂ (BẮT BUỘC): Gắn Railway Volume
+Bạn **phải gắn một ổ đĩa cứng vĩnh viễn (Volume)** vào thư mục `/storage` trên Railway. Việc này giúp lưu lại vĩnh viễn file ISO và ổ đĩa cài đặt Windows, chỉ cần tải và cài đặt đúng **1 lần duy nhất**, từ các lần sau Windows sẽ khởi động trực tiếp trong vòng vài giây!
+
+**Cách thêm Volume trên Railway:**
+1.  Truy cập vào trang dự án của bạn trên Dashboard Railway.
+2.  Bấm nút **+ New** (hoặc góc trên bên phải) -> Chọn **Volume**.
+3.  Trong phần cài đặt Volume, đặt **Mount Path** là `/storage`.
+4.  Tiến hành **Redeploy** lại dịch vụ. 
+*Kể từ bây giờ, Windows sẽ cài thẳng vào Volume này và không bao giờ bị mất hay phải tải lại nữa!*
+
+---
+
+## 🚀 Tính năng nổi bật & Bản Vá "Gian Lận" Tối Ưu Cho Railway
+
+- **SỬ DỤNG TỐI ĐA (MAX) CẤU HÌNH THẬT CỦA RAILWAY**:
+  * `CPU_CORES="max"`: Ép QEMU sử dụng toàn bộ số nhân CPU thực tế của máy chủ Railway cấp cho bạn.
+  * `RAM_SIZE="max"`: Tự động phân bổ lượng RAM lớn nhất có thể từ container cho Windows.
+- **GIAN LẬN RAM DỰ PHÒNG (`RAM_SPARE=80MB`)**:
+  * *Vấn đề*: QEMU mặc định luôn bóp lại 500MB RAM của container để làm RAM dự phòng cho hệ điều hành Host. Trên gói 1GB của Railway, việc này khiến Windows chỉ còn vỏn vẹn 465MB RAM để hoạt động (cực kỳ lag và dễ crash OOM).
+  * *Bản vá*: Đã thêm lệnh `RUN sed -i 's/RAM_SPARE=500000000/RAM_SPARE=80000000/g' /run/memory.sh` để hạ RAM dự phòng xuống còn **80MB**. Máy ảo Windows của bạn sẽ được tận dụng tới **90% dung lượng RAM thật của Railway** (hơn 850MB RAM trên gói 1GB), giúp mượt mà và ổn định hơn rất nhiều!
+- **GIAN LẬN RAM tối thiểu (Bypass RAM Check)**: Hạ mức RAM yêu cầu tối thiểu của Windows 10 từ 2GB xuống còn **128MB** (`RUN sed -i 's/echo "2G"/echo "128M"/g' /run/define.sh`), lách qua bài kiểm tra RAM của container thành công.
+- **Chạy Windows 10 siêu nhẹ (Tiny10)**: Mặc định cài đặt phiên bản **Tiny10** (bản rút gọn cực kỳ nhẹ của Windows 10, chỉ nặng 3.6 GB thay vì 5.7 GB). Phiên bản này đã lược bỏ hết bloatware, dịch vụ thừa và telemetry, giúp chạy cực kỳ mượt mà trên môi trường RAM thấp.
 - **Vá lỗi `/storage` không tìm thấy (Sửa lỗi crash)**: Đã tạo sẵn thư mục `/storage` và cấp toàn quyền đọc ghi (`chmod 777`) ngay trong `Dockerfile` để tránh lỗi `Storage folder (/storage) not found!` xảy ra khi Railway khởi chạy container không kèm ổ đĩa gắn ngoài (Volume).
 - **Vá lỗi tự ngắt container do thiếu KVM (Exit 88)**: Mặc định tắt kiểm tra ảo hóa phần cứng (`KVM="N"`) giúp container hoạt động ổn định thông qua cơ chế giả lập phần mềm (Software Emulation) mà không bị crash hay tự động tắt với mã lỗi `88`.
-- **Tối ưu RAM động (`RAM_SIZE="max"`)**: Tự động tính toán và phân bổ lượng RAM tối đa an toàn mà container của Railway cho phép (thường là khoảng 465MB trên gói 1GB RAM) giúp tránh bị tràn RAM máy chủ.
-- **Giao diện Web trực quan (noVNC)**: Truy cập trực tiếp Windows thông qua trình duyệt web ở cổng `8006` mà không cần cài đặt thêm phần mềm RDP nào khác.
-- **Hỗ trợ Remote Desktop (RDP)**: Có thể kết nối qua cổng `3389` bằng phần mềm Remote Desktop Connection mặc định trên máy tính của bạn.
-- **Tối ưu dung lượng (Sparse Disk)**: Sử dụng định dạng `qcow2` giúp ổ đĩa ảo co giãn động, bắt đầu từ kích thước cực kỳ nhỏ và chỉ tăng lên khi có dữ liệu mới, tránh bị vượt quá hạn mức ổ đĩa của Railway.
 
 ## 🛠️ Triển khai lên Railway
 
@@ -26,8 +47,8 @@ Bạn có thể chỉnh sửa các biến này trực tiếp trong tab **Variabl
 | Biến môi trường | Giá trị mặc định | Giải thích |
 |---|---|---|
 | `VERSION` | `tiny10` | Phiên bản Windows (`tiny10` cho Windows 10 siêu nhẹ - khuyên dùng; đổi thành `10` nếu muốn dùng Windows 10 Pro gốc). |
-| `RAM_SIZE` | `max` | Để `max` để hệ thống tự động lấy lượng RAM tối đa an toàn từ Railway. |
-| `CPU_CORES` | `2` | Số lượng nhân CPU cấp cho máy ảo. |
+| `RAM_SIZE` | `max` | Để `max` để hệ thống tự động lấy lượng RAM tối đa an toàn từ Railway (kết hợp bypass RAM_SPARE). |
+| `CPU_CORES` | `max` | Ép dùng tối đa toàn bộ số nhân CPU thực tế của máy chủ Railway. |
 | `DISK_SIZE` | `32G` | Dung lượng tối đa của ổ đĩa ảo. |
 | `DISK_FMT` | `qcow2` | Định dạng ổ đĩa ảo. Khuyên dùng `qcow2` để tiết kiệm tài nguyên trên Cloud. |
 | `KVM` | `N` | Khuyên dùng `N` trên Railway. Đặt thành `Y` nếu môi trường của bạn hỗ trợ KVM phần cứng lồng nhau. |
