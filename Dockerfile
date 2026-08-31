@@ -11,6 +11,12 @@ RUN sed -i 's/echo "2G"/echo "128M"/g' /run/define.sh
 # Giúp QEMU tận dụng được tối đa tới ~90% cấu hình RAM thật của container Railway cấp thay vì bị bóp chỉ được dùng một nửa
 RUN sed -i 's/RAM_SPARE=500000000/RAM_SPARE=80000000/g' /run/memory.sh
 
+# GIAN LẬN (BYPASS) KIỂM TRA DUNG LƯỢNG Ổ CỨNG: Vô hiệu hóa kiểm tra dung lượng ổ cứng trống khi tải ISO và tạo đĩa ảo
+RUN sed -i 's/expected > capacity/1 == 2/g' /run/download.sh && \
+    sed -i 's/dataSize > available/1 == 2/g' /run/disk.sh && \
+    sed -i 's/required > available/1 == 2/g' /run/disk.sh && \
+    sed -i 's/currentSize > available/1 == 2/g' /run/disk.sh
+
 # Phiên bản Windows muốn cài đặt:
 # Sử dụng "tiny10" (Windows 10 siêu nhẹ) để chạy siêu nhanh và mượt mà trên môi trường RAM thấp.
 # (Bạn có thể đổi lại thành "10" nếu thích bản Windows 10 Pro gốc trong tab Variables trên Railway)
