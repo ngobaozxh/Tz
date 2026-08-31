@@ -1,10 +1,12 @@
 # Windows 10 inside Docker for Railway
 
-Repository này đã được cấu hình lại để chạy **Windows 10** mượt mà bên trong Docker container sử dụng dự án mã nguồn mở [dockurr/windows](https://github.com/dockur/windows). Cấu hình này cực kỳ tối ưu để triển khai lên các dịch vụ Cloud như **Railway**.
+Repository này đã được cấu hình lại để chạy **Windows 10** mượt mà bên trong Docker container sử dụng dự án mã nguồn mở [dockurr/windows](https://github.com/dockur/windows). Cấu hình này cực kỳ tối ưu và đã được vá lỗi triệt để để triển khai lên các dịch vụ Cloud như **Railway** theo tiêu chí "chỉ cần deploy là chạy vù vù không lỗi".
 
-## 🚀 Tính năng nổi bật
+## 🚀 Tính năng nổi bật & Bản vá đặc biệt cho Railway
 
 - **Chạy Windows 10 mượt mà**: Sử dụng nhân QEMU giả lập Windows bên trong Linux container.
+- **Vá lỗi `/storage` không tìm thấy (Sửa lỗi crash)**: Đã tạo sẵn thư mục `/storage` và cấp toàn quyền đọc ghi (`chmod 777`) ngay trong `Dockerfile` để tránh lỗi `Storage folder (/storage) not found!` xảy ra khi Railway khởi chạy container không kèm ổ đĩa gắn ngoài (Volume).
+- **Vá lỗi tự ngắt container do thiếu KVM (Exit 88)**: Mặc định tắt kiểm tra ảo hóa phần cứng (`KVM="N"`) giúp container hoạt động ổn định thông qua cơ chế giả lập phần mềm (Software Emulation) mà không bị crash hay tự động tắt với mã lỗi `88`.
 - **Giao diện Web trực quan (noVNC)**: Truy cập trực tiếp Windows thông qua trình duyệt web ở cổng `8006` mà không cần cài đặt thêm phần mềm RDP nào khác.
 - **Hỗ trợ Remote Desktop (RDP)**: Có thể kết nối qua cổng `3389` bằng phần mềm Remote Desktop Connection mặc định trên máy tính của bạn.
 - **Tối ưu dung lượng (Sparse Disk)**: Sử dụng định dạng `qcow2` giúp ổ đĩa ảo co giãn động, bắt đầu từ kích thước cực kỳ nhỏ và chỉ tăng lên khi có dữ liệu mới, tránh bị vượt quá hạn mức ổ đĩa của Railway.
@@ -25,6 +27,7 @@ Bạn có thể chỉnh sửa các biến này trực tiếp trong tab **Variabl
 | `CPU_CORES` | `2` | Số lượng nhân CPU (ví dụ: `2`, `4`). |
 | `DISK_SIZE` | `32G` | Dung lượng tối đa của ổ đĩa ảo. |
 | `DISK_FMT` | `qcow2` | Định dạng ổ đĩa ảo. Khuyên dùng `qcow2` để tiết kiệm tài nguyên trên Cloud. |
+| `KVM` | `N` | Khuyên dùng `N` trên Railway. Đặt thành `Y` nếu môi trường của bạn hỗ trợ KVM phần cứng lồng nhau. |
 | `LANGUAGE` | `English` | Ngôn ngữ hệ điều hành. |
 | `USERNAME` | `Docker` | Tên tài khoản Windows mặc định. |
 | `PASSWORD` | `admin` | Mật khẩu đăng nhập mặc định. |
@@ -50,10 +53,8 @@ Bạn có thể chỉnh sửa các biến này trực tiếp trong tab **Variabl
 
 ## 💻 Chạy thử nghiệm dưới Local (Docker)
 
-Nếu bạn muốn chạy thử nghiệm trên máy tính cá nhân trước:
+Nếu bạn muốn chạy thử nghiệm trên máy tính cá nhân trước (hỗ trợ KVM để chạy siêu nhanh):
 
 ```bash
 docker run -it --rm --name windows -e "VERSION=10" -p 8006:8006 -p 3389:3389/tcp --device=/dev/kvm --cap-add NET_ADMIN -v "./windows:/storage" dockurr/windows
 ```
-
-*Lưu ý: Chạy dưới máy cá nhân có hỗ trợ KVM phần cứng sẽ mượt mà hơn rất nhiều so với chạy trên Cloud không có KVM.*
