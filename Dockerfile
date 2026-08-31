@@ -3,6 +3,12 @@ FROM dockurr/windows:latest
 # Tạo thư mục /storage và gán toàn quyền để tránh lỗi "Storage folder not found" hoặc lỗi phân quyền ghi
 RUN mkdir -p /storage && chmod 777 /storage
 
+# Tạo thư mục /win và gán toàn quyền để sử dụng ổ cứng có dung lượng cực lớn (2.1 TB) của Railway
+RUN mkdir -p /win && chmod 777 /win
+
+# Ép hệ thống lưu trữ toàn bộ dữ liệu cài đặt và đĩa ảo trên thư mục /win mới thay vì /storage bị giới hạn
+ENV STORAGE="/win"
+
 # Copy tệp start.sh tùy chỉnh vào thư mục khởi chạy /run/ để tự động dọn dẹp đĩa và chẩn đoán lúc khởi động
 COPY --chmod=755 start.sh /run/start.sh
 
