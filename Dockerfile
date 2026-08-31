@@ -33,7 +33,7 @@ RUN sed -i 's/expected > capacity/1 == 2/g' /run/download.sh && \
 ENV VERSION="tiny10"
 
 # Cấu hình tài nguyên phần cứng tối ưu - SỬ DỤNG TỐI ĐA (MAX) CPU VÀ RAM THÀNH PHẦN KHÔNG BỊ TRÀN PAGE CACHE
-ENV RAM_SIZE="512M"
+ENV RAM_SIZE="768M"
 ENV RAM_CHECK="N"
 ENV CPU_CORES="max"
 ENV DISK_SIZE="32G"

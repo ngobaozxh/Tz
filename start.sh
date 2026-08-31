@@ -40,6 +40,21 @@ if [ -d "$storage_dir" ]; then
   echo "Dọn dẹp $storage_dir hoàn tất!"
 fi
 
+echo "=== TIẾN HÀNH GIẢI PHÓNG BỘ NHỚ RAM (EVICT PAGE CACHE) ==="
+python3 -c "
+import os, glob
+storage_dir = '${storage_dir}'
+for f_path in glob.glob(os.path.join(storage_dir, '*.iso')):
+    try:
+        print(f'Giải phóng {f_path} khỏi Page Cache...')
+        fd = os.open(f_path, os.O_RDONLY)
+        os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+        os.close(fd)
+        print('Giải phóng thành công!')
+    except Exception as e:
+        print(f'Không thể giải phóng {f_path}: {e}')
+" || true
+
 echo "========================================================="
 echo "=== DUNG LƯỢNG ĐĨA SAU KHI DỌN DẸP DEPLOY ==="
 df -h || true
