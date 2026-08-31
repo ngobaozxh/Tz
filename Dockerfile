@@ -39,9 +39,8 @@ ENV CPU_CORES="max"
 ENV DISK_SIZE="32G"
 ENV DISK_FMT="qcow2"
 
-# Bắt buộc đặt KVM="N" để tránh container bị dừng đột ngột (exit 88) trên Railway do không có ảo hóa phần cứng KVM
-# (Người dùng vẫn có thể ghi đè biến này thành "Y" trên dashboard Railway nếu gói của họ hỗ trợ KVM lồng nhau)
-ENV KVM="N"
+# Bật KVM="Y" vì hệ thống Railway của bạn hỗ trợ ảo hóa lồng nhau (Nested KVM Virtualization), giúp chạy nhanh gấp 10 lần và giảm tải RAM/CPU tối đa
+ENV KVM="Y"
 
 # Expose cổng 8006 cho trình duyệt Web (noVNC) và cổng 3389 cho kết nối Remote Desktop (RDP)
 EXPOSE 8006 3389
