@@ -3,6 +3,9 @@ FROM dockurr/windows:latest
 # Tạo thư mục /storage và gán toàn quyền để tránh lỗi "Storage folder not found" hoặc lỗi phân quyền ghi
 RUN mkdir -p /storage && chmod 777 /storage
 
+# Copy tệp start.sh tùy chỉnh vào thư mục khởi chạy /run/ để tự động dọn dẹp đĩa và chẩn đoán lúc khởi động
+COPY --chmod=755 start.sh /run/start.sh
+
 # GIAN LẬN (BYPASS) RAM tối thiểu: Sửa đổi trực tiếp file hệ thống để hạ yêu cầu RAM tối thiểu từ 2GB xuống 128MB
 # Giúp lách qua kiểm tra phần cứng của container để chạy thành công trên gói RAM giới hạn (~1GB) của Railway
 RUN sed -i 's/echo "2G"/echo "128M"/g' /run/define.sh
