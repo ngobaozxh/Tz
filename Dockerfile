@@ -1,26 +1,29 @@
 FROM dockurr/windows:latest
 
-# Tạo thư mục /storage để Railway mount vào (dù không cần RUN cũng được vì Volume sẽ overlay, nhưng để an toàn)
+# Tạo thư mục /storage để Railway mount volume
 RUN mkdir -p /storage
 
-# === ĐỪNG DÙNG SED Ở ĐÂY NỮA ===
-# Lý do: Các file /run/define.sh và /run/memory.sh thay đổi theo phiên bản. 
-# Thay vì sed (dễ hỏng build), bạn nên dùng biến môi trường (ENV) để set trực tiếp.
+# === GIAN LẬN ===
+# Tắt kiểm tra RAM tối thiểu (2GB) - cho phép chạy trên container RAM thấp
+ENV RAM_CHECK="false"
 
-# Cấu hình RAM và CPU (Dùng ENV thay vì sửa file hệ thống)
-ENV RAM_SIZE="max"
+# Cấp phát 1GB RAM cho máy ảo (phù hợp với RAM thực ~945MB)
+ENV RAM_SIZE="1G"
+
+# Tận dụng tối đa CPU (dù KVM tắt, vẫn xài được CPU)
 ENV CPU_CORES="max"
+
+# Dung lượng ổ cứng ảo (có thể giảm xuống 16G nếu muốn tiết kiệm)
 ENV DISK_SIZE="32G"
 ENV DISK_FMT="qcow2"
 
-# BẮT BUỘC phải tắt KVM (Railway không hỗ trợ ảo hóa lồng)
+# Bắt buộc tắt KVM (Railway không hỗ trợ ảo hóa lồng)
 ENV KVM="N"
 
-# Version Windows (tiny10, tiny11, hoặc 10, 11)
+# Phiên bản Tiny 10 (hoặc đổi thành "10" nếu thích bản chuẩn)
 ENV VERSION="tiny10"
 
-# === THÊM DÒNG NÀY ĐỂ GIẢM TẢI TIMEOUT ===
-# Đặt thời gian chờ DHCP lâu hơn và thử dùng mirror khác nếu có
+# Tăng thời gian chờ boot để tránh timeout
 ENV BOOT_TIMEOUT="60"
 
 EXPOSE 8006 3389
