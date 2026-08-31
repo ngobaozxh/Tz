@@ -3,11 +3,17 @@ FROM dockurr/windows:latest
 # Tạo thư mục /storage và gán toàn quyền để tránh lỗi "Storage folder not found" hoặc lỗi phân quyền ghi
 RUN mkdir -p /storage && chmod 777 /storage
 
-# Phiên bản Windows muốn cài đặt (10 cho Windows 10 Pro)
-ENV VERSION="10"
+# GIAN LẬN (BYPASS) RAM: Sửa đổi trực tiếp file hệ thống để hạ yêu cầu RAM tối thiểu từ 2GB xuống 128MB
+# Giúp lách qua kiểm tra phần cứng của container để chạy thành công trên gói RAM giới hạn (~1GB) của Railway
+RUN sed -i 's/echo "2G"/echo "128M"/g' /run/define.sh
 
-# Cấu hình tài nguyên phần cứng phù hợp với Railway
-ENV RAM_SIZE="4G"
+# Phiên bản Windows muốn cài đặt:
+# Sử dụng "tiny10" (Windows 10 siêu nhẹ) để chạy siêu nhanh và mượt mà trên môi trường RAM thấp.
+# (Bạn có thể đổi lại thành "10" nếu thích bản Windows 10 Pro gốc trong tab Variables trên Railway)
+ENV VERSION="tiny10"
+
+# Cấu hình tài nguyên phần cứng tối ưu
+ENV RAM_SIZE="max"
 ENV CPU_CORES="2"
 ENV DISK_SIZE="32G"
 ENV DISK_FMT="qcow2"

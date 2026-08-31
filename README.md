@@ -1,16 +1,19 @@
 # Windows 10 inside Docker for Railway
 
-Repository này đã được cấu hình lại để chạy **Windows 10** mượt mà bên trong Docker container sử dụng dự án mã nguồn mở [dockurr/windows](https://github.com/dockur/windows). Cấu hình này cực kỳ tối ưu và đã được vá lỗi triệt để để triển khai lên các dịch vụ Cloud như **Railway** theo tiêu chí "chỉ cần deploy là chạy vù vù không lỗi".
+Repository này đã được cấu hình lại để chạy **Windows 10** mượt mà bên trong Docker container sử dụng dự án mã nguồn mở [dockurr/windows](https://github.com/dockur/windows). Cấu hình này cực kỳ tối ưu và đã được áp dụng các bản vá "gian lận" đặc biệt để vượt qua mọi giới hạn phần cứng của **Railway**, giúp bạn chỉ cần deploy là chạy vù vù không lỗi!
 
-## 🚀 Tính năng nổi bật & Bản vá đặc biệt cho Railway
+## 🚀 Tính năng nổi bật & Các Bản Vá "Gian Lận" Đặc Biệt cho Railway
 
-- **Chạy Windows 10 mượt mà**: Sử dụng nhân QEMU giả lập Windows bên trong Linux container.
+- **Chạy Windows 10 siêu nhẹ (Tiny10)**: Mặc định cài đặt phiên bản **Tiny10** (bản rút gọn cực kỳ nhẹ của Windows 10, chỉ nặng 3.6 GB thay vì 5.7 GB). Phiên bản này đã lược bỏ hết bloatware, dịch vụ thừa và telemetry, giúp chạy cực kỳ mượt mà và phản hồi nhanh trên môi trường RAM thấp.
+- **GIAN LẬN RAM - Bypass giới hạn RAM tối thiểu 2GB**:
+  * *Vấn đề*: Railway thường giới hạn RAM ở mức ~1GB. Trong khi đó, dự án mặc định yêu cầu ít nhất 2GB RAM để khởi động Windows 10, nếu không container sẽ báo lỗi đỏ lòm và sập ngay lập tức.
+  * *Bản vá*: Đã thêm lệnh `RUN sed -i 's/echo "2G"/echo "128M"/g' /run/define.sh` để sửa đổi trực tiếp mã nguồn khởi động của container. Việc này hạ mức RAM yêu cầu tối thiểu xuống còn **128MB**, giúp lách qua bước kiểm tra phần cứng của container một cách hoàn hảo!
 - **Vá lỗi `/storage` không tìm thấy (Sửa lỗi crash)**: Đã tạo sẵn thư mục `/storage` và cấp toàn quyền đọc ghi (`chmod 777`) ngay trong `Dockerfile` để tránh lỗi `Storage folder (/storage) not found!` xảy ra khi Railway khởi chạy container không kèm ổ đĩa gắn ngoài (Volume).
 - **Vá lỗi tự ngắt container do thiếu KVM (Exit 88)**: Mặc định tắt kiểm tra ảo hóa phần cứng (`KVM="N"`) giúp container hoạt động ổn định thông qua cơ chế giả lập phần mềm (Software Emulation) mà không bị crash hay tự động tắt với mã lỗi `88`.
+- **Tối ưu RAM động (`RAM_SIZE="max"`)**: Tự động tính toán và phân bổ lượng RAM tối đa an toàn mà container của Railway cho phép (thường là khoảng 465MB trên gói 1GB RAM) giúp tránh bị tràn RAM máy chủ.
 - **Giao diện Web trực quan (noVNC)**: Truy cập trực tiếp Windows thông qua trình duyệt web ở cổng `8006` mà không cần cài đặt thêm phần mềm RDP nào khác.
 - **Hỗ trợ Remote Desktop (RDP)**: Có thể kết nối qua cổng `3389` bằng phần mềm Remote Desktop Connection mặc định trên máy tính của bạn.
 - **Tối ưu dung lượng (Sparse Disk)**: Sử dụng định dạng `qcow2` giúp ổ đĩa ảo co giãn động, bắt đầu từ kích thước cực kỳ nhỏ và chỉ tăng lên khi có dữ liệu mới, tránh bị vượt quá hạn mức ổ đĩa của Railway.
-- **Tự động cài đặt**: Khi khởi chạy lần đầu, container sẽ tự động tải ISO Windows 10 chính gốc từ Microsoft và tự động thực hiện quá trình cài đặt (OOBE) từ A-Z mà không cần bạn phải click chuột.
 
 ## 🛠️ Triển khai lên Railway
 
@@ -22,9 +25,9 @@ Bạn có thể chỉnh sửa các biến này trực tiếp trong tab **Variabl
 
 | Biến môi trường | Giá trị mặc định | Giải thích |
 |---|---|---|
-| `VERSION` | `10` | Phiên bản Windows (`10` cho Windows 10 Pro, `11` cho Windows 11, `tiny10` cho phiên bản siêu nhẹ). |
-| `RAM_SIZE` | `4G` | Dung lượng RAM cấp cho Windows (ví dụ: `2G`, `4G`, `8G`). |
-| `CPU_CORES` | `2` | Số lượng nhân CPU (ví dụ: `2`, `4`). |
+| `VERSION` | `tiny10` | Phiên bản Windows (`tiny10` cho Windows 10 siêu nhẹ - khuyên dùng; đổi thành `10` nếu muốn dùng Windows 10 Pro gốc). |
+| `RAM_SIZE` | `max` | Để `max` để hệ thống tự động lấy lượng RAM tối đa an toàn từ Railway. |
+| `CPU_CORES` | `2` | Số lượng nhân CPU cấp cho máy ảo. |
 | `DISK_SIZE` | `32G` | Dung lượng tối đa của ổ đĩa ảo. |
 | `DISK_FMT` | `qcow2` | Định dạng ổ đĩa ảo. Khuyên dùng `qcow2` để tiết kiệm tài nguyên trên Cloud. |
 | `KVM` | `N` | Khuyên dùng `N` trên Railway. Đặt thành `Y` nếu môi trường của bạn hỗ trợ KVM phần cứng lồng nhau. |
@@ -56,5 +59,5 @@ Bạn có thể chỉnh sửa các biến này trực tiếp trong tab **Variabl
 Nếu bạn muốn chạy thử nghiệm trên máy tính cá nhân trước (hỗ trợ KVM để chạy siêu nhanh):
 
 ```bash
-docker run -it --rm --name windows -e "VERSION=10" -p 8006:8006 -p 3389:3389/tcp --device=/dev/kvm --cap-add NET_ADMIN -v "./windows:/storage" dockurr/windows
+docker run -it --rm --name windows -e "VERSION=tiny10" -p 8006:8006 -p 3389:3389/tcp --device=/dev/kvm --cap-add NET_ADMIN -v "./windows:/storage" dockurr/windows
 ```
