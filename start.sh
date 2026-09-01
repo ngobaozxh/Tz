@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# === LỌC BỚT CÁC CẢNH BÁO "VÔ HẠI" LẶP LẠI MỖI LẦN KHỞI ĐỘNG ===
+# Các dòng dưới đây KHÔNG phải lỗi thực sự làm hỏng container (Windows vẫn boot
+# thành công ở cuối log). Chúng xuất hiện do chính nền tảng Railway không cấp
+# các quyền sau cho container (đây là giới hạn hạ tầng, không phải bug của repo):
+#   - /dev/net/tun, cap NET_ADMIN  -> ứng dụng đã tự động fallback sang
+#     user-mode networking (passt), máy ảo vẫn có mạng bình thường.
+#   - "failed to inspect disk ... assuming it contains data" -> cảnh báo lành
+#     tính khi disk.sh dò kiểu phân vùng qcow2 lúc ổ đĩa còn trống/mới tạo.
+# Vì start.sh này được entry.sh "source" làm bước đầu tiên, redirect exec ở
+# đây sẽ áp dụng cho toàn bộ log về sau (kể cả log do network.sh/disk.sh phát
+# sinh). Đây chỉ là lọc hiển thị (cosmetic), KHÔNG sửa được nguyên nhân gốc.
+exec 2> >(grep --line-buffered -Ev \
+  'TUN device is missing|failed to setup NAT networking|RTNETLINK answers|NET_ADMIN capability|failed to inspect disk' >&2)
+
 echo "========================================================="
 echo "=== THÔNG TIN ĐĨA VÀ ĐƯỜNG DẪN GẮN (DIAGNOSTICS) ==="
 df -h || true
